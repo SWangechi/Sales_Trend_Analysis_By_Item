@@ -1,93 +1,66 @@
 import streamlit as st
 import pandas as pd
-import pickle
-import shap
-import matplotlib.pyplot as plt
+import joblib
 
-# Load model and data
-@st.cache_data
+# Page config
+st.set_page_config(page_title="Cafe Sales Item Predictor", layout="centered")
+st.title("☕ Cafe Sales Item Predictor")
+st.markdown("Predict which **Item** was sold based on transaction details.")
+
+# Load assets
+@st.cache_resource
 def load_model():
-    with open('best_model.pkl', 'rb') as f:
-        model = pickle.load(f)
-    return model
+    return joblib.load("final_rf_model.pkl")
 
-@st.cache_data
-def load_data():
-    return pd.read_csv('encoded_dataset.csv')
+@st.cache_resource
+def load_scaler():
+    return joblib.load("scaler.pkl")
 
-model = load_model()
-data = load_data()
-
-st.set_page_config(page_title="Sales Predictor", layout="wide")
-st.title("📈 Sales Trend Predictor")
-st.markdown("Use the inputs below to predict sales for a specific item.")
-
-# Sidebar for inputs
-st.sidebar.header("🛠️ Input Parameters")
-
-exclude_cols = [
-    'Transaction ID', 'Transaction Date', 'Total Spent',
-    'target', 'sales', 'item_id', 'item_name'
-]
-
-input_features = [col for col in data.columns if col not in exclude_cols]
-
-input_data = {}
-for col in input_features:
-    if data[col].nunique() <= 10:
-        options = sorted(data[col].dropna().unique().tolist())
-        input_data[col] = st.sidebar.selectbox(f"{col}", options)
-    else:
-        min_val = float(data[col].min())
-        max_val = float(data[col].max())
-        default_val = float(data[col].mean())
-        input_data[col] = st.sidebar.slider(f"{col}", min_val, max_val, default_val)
-
-# Create DataFrame from input
-input_df = pd.DataFrame([input_data])
-
-# Make Prediction
-try:
-    prediction = model.predict(input_df)[0]
-    st.subheader("🔍 Predicted Sales:")
-    st.success(f"💰 Estimated sales: **{prediction:.2f} units**")
-
-    # Show input summary
-    st.subheader("📊 Input Summary")
-    st.dataframe(input_df.T.rename(columns={0: "Value"}))
-
-    # SHAP interpretation
-    st.subheader("🔍 Feature Contribution (SHAP)")
-    explainer = shap.Explainer(model)
-    shap_values = explainer(input_df)
-
-    # Display SHAP bar chart (for single prediction)
-    st.pyplot(shap.plots.bar(shap_values[0], show=False))
-
-    # Optional: SHAP force plot
-    with st.expander("🌈 Show SHAP Force Plot"):
-        st.set_option('deprecation.showPyplotGlobalUse', False)
-        shap.initjs()
-        fig = shap.plots.force(shap_values[0], matplotlib=True, show=False)
-        st.pyplot(fig)
-
-    # 🔽 Download Prediction Summary
-    st.subheader("⬇️ Download Prediction Summary")
-    summary_df = input_df.copy()
-    summary_df["Predicted Sales"] = prediction
-
-    csv = summary_df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Download Prediction Summary as CSV",
-        data=csv,
-        file_name='sales_prediction_summary.csv',
-        mime='text/csv'
+@st.cache_resource
+def load_encoders():
+    return (
+        joblib.load("payment_encoder.pkl"),
+        joblib.load("location_encoder.pkl"),
+        joblib.load("item_label_encoder.pkl")
     )
 
-except Exception as e:
-    st.error("🚨 Prediction or explanation failed.")
-    st.exception(e)
+model = load_model()
+scaler = load_scaler()
+payment_encoder, location_encoder, item_encoder = load_encoders()
 
-# Show sample data
-if st.checkbox("Show Sample of Training Data"):
-    st.dataframe(data.sample(10))
+# Input
+st.sidebar.header("🧾 Transaction Details")
+quantity = st.sidebar.number_input("Quantity", min_value=1, value=1)
+price_per_unit = st.sidebar.number_input("Price Per Unit", min_value=0.0, value=10.0)
+payment_method = st.sidebar.selectbox("Payment Method", list(payment_encoder.classes_))
+location = st.sidebar.selectbox("Location", list(location_encoder.classes_))
+
+# Encode inputs
+payment_encoded = payment_encoder.transform([payment_method])[0]
+location_encoded = location_encoder.transform([location])[0]
+
+input_df = pd.DataFrame({
+    'Quantity': [quantity],
+    'Price Per Unit': [price_per_unit],
+    'Payment Method': [payment_encoded],
+    'Location': [location_encoded]
+})
+
+# Scale input
+input_scaled = scaler.transform(input_df)
+
+# Predict
+prediction_encoded = model.predict(input_scaled)[0]
+
+# Check if predicted label is in encoder
+if prediction_encoded in range(len(item_encoder.classes_)):
+    predicted_item = item_encoder.inverse_transform([prediction_encoded])[0]
+else:
+    predicted_item = f"Unknown class: {prediction_encoded}"
+
+# Output
+st.subheader("🔍 Predicted Item")
+st.success(f"🍽️ The predicted item sold is: **{predicted_item}**")
+
+st.subheader("📊 Input Summary")
+st.write(input_df)
