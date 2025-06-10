@@ -1,6 +1,6 @@
 # ☕ Cafe Sales Item Prediction App
 
-This project is a **machine learning-powered web application** that predicts the most likely item sold at a café based on transaction details such as quantity, price, payment method, and location.
+This project is a **machine learning-powered web application** that predicts the most likely item sold at a café based on transaction details, including quantity, price, payment method, and location.
 
 Built using `scikit-learn` for model training and `Streamlit` for a simple, interactive interface, the app demonstrates how to deploy predictive models in a real-world business scenario.
 
@@ -8,7 +8,7 @@ Built using `scikit-learn` for model training and `Streamlit` for a simple, inte
 
 ## 🎯 Objective
 
-To accurately **predict the specific item sold** in a sales transaction using structured input data. This can help in automating transaction analysis, customer behavior prediction, and sales pattern recognition.
+To accurately **predict the specific item sold** in a sales transaction using structured input data. This can help automate transaction analysis, customer behaviour prediction, and sales pattern recognition.
 
 ---
 
@@ -56,14 +56,14 @@ To accurately **predict the specific item sold** in a sales transaction using st
 
 ```
 Sales_Trend_Analysis_By_Item/
-├── app.py                         # Streamlit app for prediction
-├── final_rf_model.pkl             # Trained Random Forest model
-├── scaler.pkl                     # Fitted StandardScaler
-├── payment_encoder.pkl            # LabelEncoder for Payment Method
-├── location_encoder.pkl           # LabelEncoder for Location
-├── item_label_encoder.pkl         # LabelEncoder for Item
-├── train_model.ipynb              # Notebook to preprocess, train & save model
-├── your_dataset.csv               # Input sales dataset (replace with your actual file)
+├── app.py                              # Streamlit app for prediction
+├── final_rf_model.pkl                  # Trained Random Forest model
+├── scaler.pkl                          # Fitted StandardScaler
+├── payment_encoder.pkl                 # LabelEncoder for Payment Method
+├── location_encoder.pkl                # LabelEncoder for Location
+├── item_label_encoder.pkl              # LabelEncoder for Item
+├── enhanced_cafe_sales_analysis.ipynb  # Notebook to preprocess, train & save model
+├── dirty_cafe_sales.csv                # Input sales dataset (replace with your actual file)
 ```
 
 ---
