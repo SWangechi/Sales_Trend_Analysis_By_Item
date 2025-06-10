@@ -112,10 +112,12 @@ Given:
 ## ✅ Future Enhancements
 
 * Add visual insights in the app (e.g., item popularity)
-* Deploy to cloud (Streamlit Cloud, Render, or Hugging Face Spaces)
 * Support time-series forecasting (Prophet, ARIMA)
 * Add user authentication for internal use
 
+---
+## Deployed app link:
+https://salestrendanalysisbyitem.streamlit.app/
 ---
 
 ## 👨‍💻 Author
